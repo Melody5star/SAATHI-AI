@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#1a5276" />
+  <link rel="manifest" href="/manifest.json" />
+  <title>CompanionAI — Your Friendly Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --blue:      #1a5276;
+      --blue-lt:   #d6eaf8;
+      --blue-mid:  #2e86c1;
+      --green:     #1e8449;
+      --green-lt:  #d5f5e3;
+      --gray-bg:   #f4f6f7;
+      --gray-line: #d5d8dc;
+      --text:      #1b2631;
+      --text-soft: #5d6d7e;
+      --white:     #ffffff;
+      --red:       #c0392b;
+      --radius:    16px;
+      --shadow:    0 2px 12px rgba(0,0,0,0.10);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: var(--gray-bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--blue);
+      color: var(--white);
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      box-shadow: var(--shadow);
+    }
+
+    .header-left { display: flex; align-items: center; gap: 14px; }
+
+    .logo-circle {
+      width: 52px; height: 52px;
+      background: var(--white);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+
+    .header-text h1 {
+      font-family: 'Lora', serif;
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .header-text p {
+      font-size: 15px;
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+
+    .status-dot {
+      width: 12px; height: 12px;
+      background: #2ecc71;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.5);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── CHAT AREA ── */
+    #chat-box {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      scroll-behavior: smooth;
+    }
+
+    .bubble-wrap {
+      display: flex;
+      flex-direction: column;
+      max-width: 82%;
+      animation: fadeUp 0.3s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .bubble-wrap.user  { align-self: flex-end; align-items: flex-end; }
+    .bubble-wrap.assistant { align-self: flex-start; align-items: flex-start; }
+
+    .bubble {
+      padding: 16px 20px;
+      border-radius: var(--radius);
+      font-size: 20px;
+      line-height: 1.65;
+      font-family: 'Source Sans 3', sans-serif;
+    }
+
+    .bubble-wrap.user .bubble {
+      background: var(--blue);
+      color: var(--white);
+      border-bottom-right-radius: 4px;
+    }
+
+    .bubble-wrap.assistant .bubble {
+      background: var(--white);
+      color: var(--text);
+      border: 1.5px solid var(--gray-line);
+      border-bottom-left-radius: 4px;
+      box-shadow: var(--shadow);
+    }
+
+    .bubble-label {
+      font-size: 13px;
+      color: var(--text-soft);
+      margin-bottom: 5px;
+      padding: 0 4px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    /* ── TYPING INDICATOR ── */
+    .typing-bubble {
+      background: var(--white);
+      border: 1.5px solid var(--gray-line);
+      border-radius: var(--radius);
+      border-bottom-left-radius: 4px;
+      padding: 18px 22px;
+      display: flex;
+      gap: 7px;
+      align-items: center;
+      box-shadow: var(--shadow);
+    }
+
+    .dot {
+      width: 10px; height: 10px;
+      background: var(--blue-mid);
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-8px); }
+    }
+
+    /* ── QUICK REPLIES ── */
+    .quick-replies {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 0 20px 10px;
+      flex-shrink: 0;
+    }
+
+    .quick-btn {
+      padding: 10px 18px;
+      border-radius: 24px;
+      border: 2px solid var(--blue-mid);
+      background: var(--white);
+      color: var(--blue);
+      font-size: 17px;
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+
+    .quick-btn:hover, .quick-btn:focus {
+      background: var(--blue);
+      color: var(--white);
+      outline: none;
+    }
+
+    /* ── INPUT AREA ── */
+    #input-area {
+      background: var(--white);
+      border-top: 2px solid var(--gray-line);
+      padding: 16px 20px;
+      flex-shrink: 0;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    #user-input {
+      flex: 1;
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      border: 2px solid var(--gray-line);
+      background: var(--gray-bg);
+      color: var(--text);
+      font-size: 20px;
+      font-family: 'Source Sans 3', sans-serif;
+      line-height: 1.5;
+      resize: none;
+      min-height: 56px;
+      max-height: 140px;
+      outline: none;
+      transition: border 0.15s;
+    }
+
+    #user-input:focus { border-color: var(--blue-mid); background: var(--white); }
+    #user-input::placeholder { color: var(--text-soft); }
+
+    .icon-btn {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    #send-btn {
+      background: var(--blue);
+      color: var(--white);
+      box-shadow: var(--shadow);
+    }
+    #send-btn:hover { background: var(--blue-mid); transform: scale(1.05); }
+    #send-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    #voice-btn {
+      background: var(--green-lt);
+      color: var(--green);
+      border: 2px solid var(--green);
+    }
+    #voice-btn:hover { background: var(--green); color: var(--white); }
+    #voice-btn.recording { background: var(--red); color: var(--white); border-color: var(--red); animation: recordPulse 1s infinite; }
+
+    @keyframes recordPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(192,57,43,0.4); }
+      50% { box-shadow: 0 0 0 10px rgba(192,57,43,0); }
+    }
+
+    .input-hint {
+      font-size: 13px;
+      color: var(--text-soft);
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    /* ── SOS BUTTON ── */
+    #sos-btn {
+      position: fixed;
+      bottom: 110px;
+      right: 20px;
+      background: var(--red);
+      color: var(--white);
+      border: none;
+      border-radius: 50px;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(192,57,43,0.35);
+      font-family: 'Source Sans 3', sans-serif;
+      letter-spacing: 0.05em;
+      z-index: 100;
+      transition: all 0.15s;
+    }
+    #sos-btn:hover { transform: scale(1.05); }
+
+    /* ── WELCOME CARD ── */
+    .welcome-card {
+      background: var(--white);
+      border: 1.5px solid var(--gray-line);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .welcome-card h2 {
+      font-family: 'Lora', serif;
+      font-size: 22px;
+      color: var(--blue);
+      margin-bottom: 10px;
+    }
+
+    .welcome-card p {
+      font-size: 19px;
+      color: var(--text-soft);
+      line-height: 1.6;
+    }
+
+    /* ── ERROR ── */
+    .error-bubble {
+      background: #fdedec;
+      border: 1.5px solid #e74c3c;
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      font-size: 18px;
+      color: var(--red);
+    }
+
+    /* ── SCROLLBAR ── */
+    #chat-box::-webkit-scrollbar { width: 6px; }
+    #chat-box::-webkit-scrollbar-track { background: transparent; }
+    #chat-box::-webkit-scrollbar-thumb { background: var(--gray-line); border-radius: 3px; }
+
+    @media (max-width: 480px) {
+      .bubble { font-size: 18px; }
+      #user-input { font-size: 18px; }
+      .quick-btn { font-size: 16px; }
+      header { padding: 14px 16px; }
+      .header-text h1 { font-size: 21px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-left">
+      <div class="logo-circle">🤝</div>
+      <div class="header-text">
+        <h1>CompanionAI</h1>
+        <p>Your friendly helper — always here</p>
+      </div>
+    </div>
+    <div class="status-dot" title="Online"></div>
+  </header>
+
+  <div id="chat-box">
+    <div class="bubble-wrap assistant">
+      <div class="bubble-label">CompanionAI</div>
+      <div class="welcome-card">
+        <h2>Hello! Welcome 👋</h2>
+        <p>I am your friendly AI companion. I am here to help you with <strong>health questions</strong>, <strong>daily reminders</strong>, <strong>news</strong>, or just a friendly <strong>conversation</strong>.<br/><br/>You can type your question below — or use the big green button to <strong>speak to me</strong>!</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="quick-replies" id="quick-replies">
+    <button class="quick-btn" onclick="sendQuick('How are you today?')">👋 Say Hello</button>
+    <button class="quick-btn" onclick="sendQuick('Give me a health tip for today')">💊 Health Tip</button>
+    <button class="quick-btn" onclick="sendQuick('Tell me something nice today')">🌞 Good News</button>
+    <button class="quick-btn" onclick="sendQuick('What can you help me with?')">❓ What can you do?</button>
+  </div>
+
+  <div id="input-area">
+    <div class="input-row">
+      <button id="voice-btn" class="icon-btn" onclick="toggleVoice()" title="Speak to me">🎤</button>
+      <textarea id="user-input" placeholder="Type your message here..." rows="1"
+        onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button id="send-btn" class="icon-btn" onclick="sendMessage()" title="Send message">➤</button>
+    </div>
+    <p class="input-hint">Press the green mic button to speak &nbsp;|&nbsp; Press Enter to send</p>
+  </div>
+
+  <button id="sos-btn" onclick="sosAlert()">🆘 SOS</button>
+
+<script>
+  const chatBox = document.getElementById('chat-box');
+  const input   = document.getElementById('user-input');
+  const sendBtn = document.getElementById('send-btn');
+  const voiceBtn = document.getElementById('voice-btn');
+
+  const SYSTEM_PROMPT = `You are CompanionAI — a warm, caring, and patient AI assistant designed specifically for senior citizens in the USA.
+
+YOUR PERSONALITY:
+- Speak clearly and warmly — like a kind, trusted friend
+- Use simple, easy-to-understand English — no jargon
+- Be patient, encouraging, and never condescending
+- Always be positive and supportive
+- Keep responses concise — 2 to 4 short sentences maximum unless they ask for more
+- Use a new line between paragraphs for easy reading
+
+YOUR EXPERTISE:
+- Health tips and general wellness advice (always recommend seeing a doctor for serious issues)
+- Medicare, Medicaid, and Social Security general information
+- Daily reminders and helpful routines
+- Friendly conversation and companionship
+- Emergency guidance (always suggest calling 911 for emergencies)
+- Scam awareness and protection tips
+- Local community resources for seniors
+
+IMPORTANT RULES:
+- Never diagnose medical conditions — always recommend consulting a doctor
+- For any emergency, always say "Please call 911 immediately"
+- If someone seems lonely or sad, be extra warm and compassionate
+- Never use technical terms without explaining them
+- Always end with an offer to help further`;
+
+  const history = [];
+
+  function addMessage(role, text, isError = false) {
+    const wrap = document.createElement('div');
+    wrap.className = `bubble-wrap ${role}`;
+
+    const label = document.createElement('div');
+    label.className = 'bubble-label';
+    label.textContent = role === 'user' ? 'You' : 'CompanionAI';
+
+    const bubble = document.createElement('div');
+    bubble.className = isError ? 'error-bubble' : 'bubble';
+    bubble.innerHTML = text.replace(/\n/g, '<br/>');
+
+    wrap.appendChild(label);
+    wrap.appendChild(bubble);
+    chatBox.appendChild(wrap);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return wrap;
+  }
+
+  function addTyping() {
+    const wrap = document.createElement('div');
+    wrap.className = 'bubble-wrap assistant';
+    wrap.id = 'typing-wrap';
+
+    const label = document.createElement('div');
+    label.className = 'bubble-label';
+    label.textContent = 'CompanionAI';
+
+    const typing = document.createElement('div');
+    typing.className = 'typing-bubble';
+    typing.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+
+    wrap.appendChild(label);
+    wrap.appendChild(typing);
+    chatBox.appendChild(wrap);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return wrap;
+  }
+
+  async function sendMessage(overrideText) {
+    const text = (overrideText || input.value).trim();
+    if (!text) return;
+
+    document.getElementById('quick-replies').style.display = 'none';
+
+    addMessage('user', text);
+    history.push({ role: 'user', content: text });
+    input.value = '';
+    input.style.height = 'auto';
+    sendBtn.disabled = true;
+
+    const typingWrap = addTyping();
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: history })
+      });
+
+      const data = await res.json();
+      typingWrap.remove();
+
+      if (data.error) {
+        addMessage('assistant', '⚠️ ' + data.error, true);
+        return;
+      }
+
+      const reply = data.reply;
+      addMessage('assistant', reply);
+      history.push({ role: 'assistant', content: reply });
+
+      if ('speechSynthesis' in window) {
+        const utt = new SpeechSynthesisUtterance(reply);
+        utt.rate = 0.88;
+        utt.pitch = 1.05;
+        utt.lang = 'en-US';
+        const voices = speechSynthesis.getVoices();
+        const preferred = voices.find(v => v.name.includes('Samantha') || v.name.includes('Karen') || v.name.includes('Google US'));
+        if (preferred) utt.voice = preferred;
+        speechSynthesis.speak(utt);
+      }
+
+    } catch (err) {
+      typingWrap.remove();
+      addMessage('assistant', '⚠️ Sorry, something went wrong. Please try again.', true);
+    } finally {
+      sendBtn.disabled = false;
+    }
+  }
+
+  function sendQuick(text) {
+    sendMessage(text);
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+  }
+
+  let recognition = null;
+  let isRecording = false;
+
+  function toggleVoice() {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      alert('Sorry, voice input is not supported on this browser. Please try Google Chrome.');
+      return;
+    }
+
+    if (isRecording) {
+      recognition.stop();
+      return;
+    }
+
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SR();
+    recognition.lang = 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+      isRecording = true;
+      voiceBtn.classList.add('recording');
+      voiceBtn.textContent = '⏹';
+      voiceBtn.title = 'Stop recording';
+    };
+
+    recognition.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      input.value = transcript;
+      autoResize(input);
+    };
+
+    recognition.onend = () => {
+      isRecording = false;
+      voiceBtn.classList.remove('recording');
+      voiceBtn.textContent = '🎤';
+      voiceBtn.title = 'Speak to me';
+      if (input.value.trim()) sendMessage();
+    };
+
+    recognition.onerror = () => {
+      isRecording = false;
+      voiceBtn.classList.remove('recording');
+      voiceBtn.textContent = '🎤';
+    };
+
+    recognition.start();
+  }
+
+  function sosAlert() {
+    if (confirm('Do you need emergency help?\n\nPress OK to get emergency information.')) {
+      sendMessage('I need emergency help right now');
+    }
+  }
+
+  if ('speechSynthesis' in window) {
+    speechSynthesis.getVoices();
+  }
+</script>
+</body>
+</html>
