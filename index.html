@@ -361,10 +361,10 @@ function addTyping() {
   return wrap;
 }
 
-var history = loadHistory();
+var chatHistory = loadHistory();
 
 function renderHistory() {
-  if (history.length === 0) {
+  if (chatHistory.length === 0) {
     var wrap = document.createElement('div');
     wrap.className = 'bubble-wrap assistant';
     var label = document.createElement('div');
@@ -377,8 +377,8 @@ function renderHistory() {
     wrap.appendChild(card);
     chatBox.appendChild(wrap);
   } else {
-    for (var i = 0; i < history.length; i++) {
-      addMessage(history[i].role, history[i].content, null);
+    for (var i = 0; i < chatHistory.length; i++) {
+      addMessage(chatHistory[i].role, chatHistory[i].content, null);
     }
     var count = loadReminders().length;
     if (count > 0) {
@@ -398,8 +398,8 @@ function sendMessage(overrideText) {
   }
   document.getElementById('quick-replies').style.display = 'none';
   addMessage('user', text, null);
-  history.push({ role: 'user', content: text });
-  saveHistory(history);
+  chatHistory.push({ role: 'user', content: text });
+  saveHistory(chatHistory);
   input.value = '';
   input.style.height = 'auto';
   sendBtn.disabled = true;
@@ -408,7 +408,7 @@ function sendMessage(overrideText) {
   fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages: history })
+    body: JSON.stringify({ messages: chatHistory })
   })
   .then(function(res) { return res.json(); })
   .then(function(data) {
@@ -421,8 +421,8 @@ function sendMessage(overrideText) {
     var reminderInfo = parseAndSetReminder(rawReply);
     var cleanedReply = cleanReply(rawReply);
     addMessage('assistant', cleanedReply, reminderInfo);
-    history.push({ role: 'assistant', content: cleanedReply });
-    saveHistory(history);
+    chatHistory.push({ role: 'assistant', content: cleanedReply });
+    saveHistory(chatHistory);
     speakText(cleanedReply);
   })
   .catch(function(err) {
