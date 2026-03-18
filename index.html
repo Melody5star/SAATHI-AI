@@ -408,7 +408,31 @@ function sendMessage(overrideText) {
   fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages: chatHistory })
+    body: JSON.stringify({
+  messages: chatHistory,
+  currentTime: new Date().toLocaleTimeString('hi-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  })
+})
+```
+
+---
+
+## How It Works Now
+```
+User: "2 minute baad yaad dilao"
+           ↓
+App sends current time: "14:32"
+           ↓
+AI calculates: 14:32 + 2 = 14:34
+           ↓
+AI replies: "Bilkul! [REMINDER:14:34:Yaad dilana!]"
+           ↓
+App sets reminder for 14:34 ✅
+           ↓
+14:34 → Voice fires! 🔊✅
   })
   .then(function(res) { return res.json(); })
   .then(function(data) {
