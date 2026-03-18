@@ -53,16 +53,14 @@
       font-size: 28px; flex-shrink: 0;
       border: 2px solid var(--gold);
     }
-    .header-text h1 { font-size: 26px; font-weight: 600; line-height: 1.2; }
+    .header-text h1 { font-size: 26px; font-weight: 600; }
     .header-text p { font-size: 14px; opacity: 0.88; margin-top: 2px; }
-    .status-dot {
-      width: 12px; height: 12px;
-      background: #2ecc71;
-      border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.5);
-      animation: pulse 2s infinite;
+    #clock {
+      font-size: 15px; font-weight: 600;
+      background: rgba(255,255,255,0.2);
+      padding: 6px 12px; border-radius: 20px;
+      letter-spacing: 0.05em;
     }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
     #chat-box {
       flex: 1; overflow-y: auto;
       padding: 22px 18px;
@@ -75,7 +73,7 @@
       animation: fadeUp 0.3s ease;
     }
     @keyframes fadeUp {
-      from { opacity:0; transform:translateY(10px); }
+      from { opacity:0; transform:translateY(8px); }
       to   { opacity:1; transform:translateY(0); }
     }
     .bubble-wrap.user      { align-self: flex-end;   align-items: flex-end; }
@@ -128,7 +126,7 @@
       padding: 10px 16px; border-radius: 24px;
       border: 2px solid var(--saffron-md);
       background: var(--white); color: var(--saffron);
-      font-size: 17px; font-family: 'Hind', sans-serif;
+      font-size: 16px; font-family: 'Hind', sans-serif;
       font-weight: 600; cursor: pointer; transition: all 0.15s;
     }
     .quick-btn:hover { background: var(--saffron); color: var(--white); }
@@ -163,9 +161,9 @@
     #voice-btn:hover { background: var(--green); color: var(--white); }
     #voice-btn.recording {
       background: var(--red); color: var(--white);
-      border-color: var(--red); animation: recordPulse 1s infinite;
+      border-color: var(--red); animation: recPulse 1s infinite;
     }
-    @keyframes recordPulse {
+    @keyframes recPulse {
       0%,100% { box-shadow: 0 0 0 0 rgba(192,57,43,0.4); }
       50%      { box-shadow: 0 0 0 10px rgba(192,57,43,0); }
     }
@@ -179,16 +177,6 @@
       font-family: 'Hind', sans-serif; z-index: 100; transition: all 0.15s;
     }
     #sos-btn:hover { transform: scale(1.05); }
-    .welcome-card {
-      background: var(--white);
-      border: 1.5px solid var(--gray-line);
-      border-top: 4px solid var(--gold);
-      border-radius: var(--radius);
-      padding: 22px; text-align: center;
-      box-shadow: var(--shadow);
-    }
-    .welcome-card h2 { font-size: 24px; color: var(--saffron); margin-bottom: 10px; font-weight: 600; }
-    .welcome-card p { font-size: 19px; color: var(--text-soft); line-height: 1.7; }
     .reminder-badge {
       background: var(--gold); color: #6b3e00;
       border-radius: 8px; padding: 5px 12px;
@@ -212,128 +200,148 @@
     <div class="logo-circle">🙏</div>
     <div class="header-text">
       <h1>साथी AI</h1>
-      <p>आपका अपना डिजिटल सहायक — हमेशा साथ</p>
+      <p id="header-sub">आपका अपना डिजिटल सहायक</p>
     </div>
   </div>
-  <div class="status-dot"></div>
+  <div id="clock">--:--</div>
 </header>
 
 <div id="chat-box"></div>
 
 <div class="quick-replies" id="quick-replies">
-  <button class="quick-btn" onclick="sendQuick('नमस्ते! आप कैसे हैं?')">🙏 नमस्ते</button>
-  <button class="quick-btn" onclick="sendQuick('आज का स्वास्थ्य सुझाव दीजिए')">💊 स्वास्थ्य टिप</button>
-  <button class="quick-btn" onclick="sendQuick('मुझे 2 मिनट बाद याद दिलाएं')">⏰ रिमाइंडर</button>
-  <button class="quick-btn" onclick="sendQuick('आप मेरी क्या मदद कर सकते हैं?')">❓ मदद</button>
+  <button class="quick-btn" onclick="sq('आज का दिन कैसा है?')">🌅 Good Morning</button>
+  <button class="quick-btn" onclick="sq('आज की ताज़ा खबर क्या है?')">📰 खबर</button>
+  <button class="quick-btn" onclick="sq('आज कौन सी तारीख है?')">📅 तारीख</button>
+  <button class="quick-btn" onclick="sq('एक स्वास्थ्य टिप दीजिए')">💊 स्वास्थ्य</button>
 </div>
 
 <div id="input-area">
   <div class="input-row">
     <button id="voice-btn" class="icon-btn" onclick="toggleVoice()" title="बोलकर पूछें">🎤</button>
     <textarea id="user-input"
-      placeholder="यहाँ अपनी बात लिखें... (Hindi या English में)"
+      placeholder="कुछ भी पूछें... (Hindi या English में)"
       rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
     <button id="send-btn" class="icon-btn" onclick="sendMessage()" title="भेजें">➤</button>
   </div>
-  <p class="input-hint">हरा बटन दबाकर बोलें &nbsp;|&nbsp; Enter दबाकर भेजें</p>
+  <p class="input-hint">🎤 हरा बटन दबाकर बोलें &nbsp;|&nbsp; Enter दबाकर भेजें</p>
 </div>
 
 <button id="sos-btn" onclick="sosAlert()">🆘 आपातकाल</button>
 
 <script>
-var MEMORY_KEY   = 'saathiai_history';
-var REMINDER_KEY = 'saathiai_reminders';
-var chatBox      = document.getElementById('chat-box');
-var inputEl      = document.getElementById('user-input');
-var sendBtn      = document.getElementById('send-btn');
-var voiceBtn     = document.getElementById('voice-btn');
-var recog        = null;
-var isRec        = false;
-var chatHistory  = [];
+// ── STATE ──
+var chatLog     = [];
+var userName    = localStorage.getItem('saathi_name') || '';
+var reminders   = [];
+var recog       = null;
+var isRec       = false;
+var greeted     = false;
 
-function saveChat(h) {
-  localStorage.setItem(MEMORY_KEY, JSON.stringify(h.slice(-30)));
-}
-function loadChat() {
-  try { return JSON.parse(localStorage.getItem(MEMORY_KEY)) || []; }
-  catch(e) { return []; }
-}
-function saveRem(r) {
-  localStorage.setItem(REMINDER_KEY, JSON.stringify(r));
-}
-function loadRem() {
-  try { return JSON.parse(localStorage.getItem(REMINDER_KEY)) || []; }
-  catch(e) { return []; }
-}
+// ── ELEMENTS ──
+var chatBox  = document.getElementById('chat-box');
+var inputEl  = document.getElementById('user-input');
+var sendBtn  = document.getElementById('send-btn');
+var voiceBtn = document.getElementById('voice-btn');
+var clockEl  = document.getElementById('clock');
 
-function getCurrentTime() {
+// ── CLOCK ──
+function updateClock() {
+  var now = new Date();
+  var h = now.getHours();
+  var m = now.getMinutes();
+  clockEl.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+// ── TIME HELPERS ──
+function getGreeting() {
+  var h = new Date().getHours();
+  if (h >= 5  && h < 12) return 'Good Morning 🌅';
+  if (h >= 12 && h < 17) return 'Good Afternoon ☀️';
+  if (h >= 17 && h < 21) return 'Good Evening 🌇';
+  return 'Good Night 🌙';
+}
+function getFullTime() {
+  var now = new Date();
+  return now.toLocaleString('hi-IN', {
+    weekday: 'long', year: 'numeric',
+    month: 'long', day: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: true
+  });
+}
+function get24Time() {
   var now = new Date();
   var h = now.getHours();
   var m = now.getMinutes();
   return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
 }
 
+// ── REMINDER ENGINE ──
 function parseReminder(reply) {
   var match = reply.match(/\[REMINDER:(\d{1,2}):(\d{2}):([^\]]+)\]/);
   if (!match) return null;
-  var rh = parseInt(match[1]);
-  var rm = parseInt(match[2]);
+  var rh  = parseInt(match[1]);
+  var rm  = parseInt(match[2]);
   var msg = match[3];
   var now = new Date();
-  var rt = new Date();
+  var rt  = new Date();
   rt.setHours(rh, rm, 0, 0);
   if (rt <= now) rt.setDate(rt.getDate() + 1);
-  var rems = loadRem();
-  rems.push({ message: msg, time: rt.getTime(), fired: false });
-  saveRem(rems);
+  reminders.push({ msg: msg, time: rt.getTime() });
+  localStorage.setItem('saathi_reminders', JSON.stringify(reminders));
   var ts = (rh < 10 ? '0' : '') + rh + ':' + (rm < 10 ? '0' : '') + rm;
-  return { message: msg, timeStr: ts };
+  return { msg: msg, timeStr: ts };
 }
 
-function cleanText(reply) {
-  return reply.replace(/\[REMINDER:[^\]]+\]/g, '').trim();
+function checkReminders() {
+  var now  = Date.now();
+  var keep = [];
+  for (var i = 0; i < reminders.length; i++) {
+    if (reminders[i].time <= now) {
+      fireReminder(reminders[i].msg);
+    } else {
+      keep.push(reminders[i]);
+    }
+  }
+  reminders = keep;
+  localStorage.setItem('saathi_reminders', JSON.stringify(reminders));
 }
-
-function speak(text) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  var u = new SpeechSynthesisUtterance(text);
-  u.rate  = 0.85;
-  u.pitch = 1.0;
-  u.lang  = /[\u0900-\u097F]/.test(text) ? 'hi-IN' : 'en-IN';
-  window.speechSynthesis.speak(u);
-}
+setInterval(checkReminders, 20000);
 
 function fireReminder(msg) {
-  addMsg('assistant', '⏰ ' + msg + '\n\nKya aapne kar liya? 🙏', null);
-  speak(msg);
+  var text = '⏰ याद दिलाना था: ' + msg;
+  addBubble('assistant', text, null);
+  speak(text);
   if (window.Notification && Notification.permission === 'granted') {
     new Notification('साथी AI ⏰', { body: msg });
   }
 }
 
-function checkRem() {
-  var rems = loadRem();
-  var now  = Date.now();
-  var keep = [];
-  for (var i = 0; i < rems.length; i++) {
-    if (!rems[i].fired && rems[i].time <= now) {
-      fireReminder(rems[i].message);
-    } else if (!rems[i].fired) {
-      keep.push(rems[i]);
-    }
-  }
-  saveRem(keep);
+function cleanReply(r) {
+  return r.replace(/\[REMINDER:[^\]]+\]/g, '').trim();
 }
-setInterval(checkRem, 15000);
-checkRem();
 
-function addMsg(role, text, badge) {
+// ── SPEECH ──
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  var u   = new SpeechSynthesisUtterance(text);
+  u.rate  = 0.88;
+  u.pitch = 1.05;
+  u.lang  = /[\u0900-\u097F]/.test(text) ? 'hi-IN' : 'en-IN';
+  window.speechSynthesis.speak(u);
+}
+
+// ── CHAT UI ──
+function addBubble(role, text, badge) {
   var wrap = document.createElement('div');
   wrap.className = 'bubble-wrap ' + role;
   var lbl = document.createElement('div');
   lbl.className = 'bubble-label';
-  lbl.textContent = role === 'user' ? 'आप' : 'साथी AI';
+  lbl.textContent = role === 'user'
+    ? (userName ? userName : 'आप')
+    : 'साथी AI';
   var bub = document.createElement('div');
   bub.className = 'bubble';
   bub.innerHTML = text.replace(/\n/g, '<br/>');
@@ -342,7 +350,7 @@ function addMsg(role, text, badge) {
   if (badge) {
     var b = document.createElement('div');
     b.className = 'reminder-badge';
-    b.textContent = '⏰ Reminder set: ' + badge.timeStr + ' — ' + badge.message;
+    b.textContent = '⏰ Reminder set: ' + badge.timeStr + ' — ' + badge.msg;
     wrap.appendChild(b);
   }
   chatBox.appendChild(wrap);
@@ -352,7 +360,7 @@ function addMsg(role, text, badge) {
 function addTyping() {
   var wrap = document.createElement('div');
   wrap.className = 'bubble-wrap assistant';
-  wrap.id = 'typing-wrap';
+  wrap.id = 'tw';
   var lbl = document.createElement('div');
   lbl.className = 'bubble-label';
   lbl.textContent = 'साथी AI';
@@ -366,91 +374,129 @@ function addTyping() {
   return wrap;
 }
 
-function renderWelcome() {
-  var wrap = document.createElement('div');
-  wrap.className = 'bubble-wrap assistant';
-  var lbl = document.createElement('div');
-  lbl.className = 'bubble-label';
-  lbl.textContent = 'साथी AI';
-  var card = document.createElement('div');
-  card.className = 'welcome-card';
-  card.innerHTML = '<h2>नमस्ते! स्वागत है 🙏</h2><p>मैं आपका साथी AI हूँ।<br/><strong>स्वास्थ्य सलाह</strong>, <strong>दवाइयाँ याद दिलाना</strong>,<br/><strong>सरकारी योजनाएँ</strong>, या बस <strong>बातें करना</strong>।<br/><br/>नीचे अपनी बात लिखें — या हरा बटन दबाकर <strong>बोलें</strong>!</p>';
-  wrap.appendChild(lbl);
-  wrap.appendChild(card);
-  chatBox.appendChild(wrap);
-}
-
-function init() {
-  chatHistory = loadChat();
-  if (chatHistory.length === 0) {
-    renderWelcome();
-  } else {
-    for (var i = 0; i < chatHistory.length; i++) {
-      addMsg(chatHistory[i].role, chatHistory[i].content, null);
-    }
-    var cnt = loadRem().length;
-    if (cnt > 0) {
-      var info = document.createElement('div');
-      info.style.cssText = 'text-align:center;font-size:13px;color:#7d5a4f;padding:8px';
-      info.textContent = '✅ ' + cnt + ' रिमाइंडर active हैं';
-      chatBox.appendChild(info);
+// ── NAME CAPTURE ──
+function checkForName(text) {
+  var patterns = [
+    /(?:mera naam|my name is|main hoon|I am|mai hoon|naam hai)\s+([A-Za-z\u0900-\u097F]+)/i,
+    /^([A-Za-z\u0900-\u097F]{2,15})$/
+  ];
+  if (!userName) {
+    for (var i = 0; i < patterns.length; i++) {
+      var m = text.match(patterns[i]);
+      if (m && m[1]) {
+        userName = m[1].trim();
+        localStorage.setItem('saathi_name', userName);
+        document.getElementById('header-sub').textContent = 'नमस्ते, ' + userName + ' जी! 🙏';
+        break;
+      }
     }
   }
 }
 
+// ── SEND MESSAGE ──
 function sendMessage(override) {
   var text = (override || inputEl.value).trim();
   if (!text) return;
+
   if (window.Notification && Notification.permission === 'default') {
     Notification.requestPermission();
   }
+
   document.getElementById('quick-replies').style.display = 'none';
-  addMsg('user', text, null);
-  chatHistory.push({ role: 'user', content: text });
-  saveChat(chatHistory);
+  checkForName(text);
+  addBubble('user', text, null);
+  chatLog.push({ role: 'user', content: text });
+
   inputEl.value = '';
   inputEl.style.height = 'auto';
   sendBtn.disabled = true;
   var tw = addTyping();
 
+  var systemPrompt = 'Aap "Saathi AI" hain — ek smart, friendly AI assistant.\n\n' +
+    'ABHI KA SAMAY: ' + getFullTime() + '\n\n' +
+    'USER KA NAAM: ' + (userName || 'pata nahi abhi tak') + '\n\n' +
+    'AAPKI PERSONALITY:\n' +
+    '- Bilkul Alexa ya Google Assistant ki tarah kaam karo\n' +
+    '- Friendly, warm aur helpful\n' +
+    '- Hindi, English ya Hinglish — jo user bole wahi bolna\n' +
+    '- Short replies — 2-3 lines maximum jab tak zyada na manga jaye\n\n' +
+    'AAP KYA KAR SAKTE HO:\n' +
+    '- General knowledge ke sawaal\n' +
+    '- Date, time, din batana\n' +
+    '- India aur world news ke baare mein batana\n' +
+    '- Health tips\n' +
+    '- Sarkari yojanaein — PM Vaya Vandana, Ayushman Bharat etc\n' +
+    '- Friendly baatein aur saath\n' +
+    '- Emergency mein 112 bolna\n\n' +
+    'REMINDER RULE — BAHUT ZAROORI:\n' +
+    'SIRF TAB reminder set karo jab user SEEDHA bole:\n' +
+    '"remind me", "yaad dilao", "reminder set karo", "alarm lagao"\n' +
+    'Agar user sirf general baat kare, news pooche, health pooche\n' +
+    '— TAB BILKUL reminder mat mention karo!\n\n' +
+    'Jab reminder set karna ho:\n' +
+    'Current time use karo + calculate karo sahi time\n' +
+    'Format: [REMINDER:HH:MM:message yahan]\n' +
+    'Example: Abhi 14:30 hai, user bole "5 min baad batao"\n' +
+    '→ [REMINDER:14:35:Aapka reminder!]\n\n' +
+    'IMPORTANT: Ek reply mein SIRF EK KAAM karo.\n' +
+    'Agar reminder nahi manga — [REMINDER] tag bilkul mat likho!';
+
+  var messages = [{ role: 'system', content: systemPrompt }];
+  for (var i = 0; i < chatLog.length; i++) {
+    messages.push(chatLog[i]);
+  }
+
   fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      messages: chatHistory,
-      currentTime: getCurrentTime()
-    })
+    body: JSON.stringify({ messages: messages })
   })
   .then(function(res) { return res.json(); })
   .then(function(data) {
     tw.remove();
     if (data.error) {
-      addMsg('assistant', '⚠️ ' + data.error, null);
+      addBubble('assistant', '⚠️ ' + data.error, null);
       sendBtn.disabled = false;
       return;
     }
-    var raw    = data.reply;
-    var badge  = parseReminder(raw);
-    var clean  = cleanText(raw);
-    addMsg('assistant', clean, badge);
-    chatHistory.push({ role: 'assistant', content: clean });
-    saveChat(chatHistory);
+    var raw   = data.reply;
+    var badge = parseReminder(raw);
+    var clean = cleanReply(raw);
+    addBubble('assistant', clean, badge);
+    chatLog.push({ role: 'assistant', content: clean });
+    if (chatLog.length > 40) chatLog = chatLog.slice(-40);
     speak(clean);
     sendBtn.disabled = false;
   })
   .catch(function() {
     tw.remove();
-    addMsg('assistant', '⚠️ कुछ गलत हो गया। फिर कोशिश करें।', null);
+    addBubble('assistant', '⚠️ कुछ गलत हो गया। फिर कोशिश करें।', null);
     sendBtn.disabled = false;
   });
 }
 
-function sendQuick(t) { sendMessage(t); }
+// ── GREETING ON LOAD ──
+function greetUser() {
+  var g = getGreeting();
+  var name = userName ? userName + ' जी!' : '';
+  var msg = g + (name ? ' ' + name : '') +
+    ' मैं साथी AI हूँ — आपका अपना डिजिटल सहायक।';
+
+  if (!userName) {
+    msg += ' आपका नाम क्या है?';
+  } else {
+    msg += ' आज मैं आपकी कैसे मदद कर सकता हूँ?';
+  }
+
+  addBubble('assistant', msg, null);
+  speak(msg);
+}
+
+function sq(t) { sendMessage(t); }
 
 function handleKey(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
+    e.preventDefault(); sendMessage();
   }
 }
 
@@ -459,6 +505,7 @@ function autoResize(el) {
   el.style.height = Math.min(el.scrollHeight, 140) + 'px';
 }
 
+// ── VOICE ──
 function toggleVoice() {
   if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
     alert('Google Chrome use karein'); return;
@@ -498,7 +545,15 @@ function sosAlert() {
   }
 }
 
-init();
+// ── INIT ──
+var savedRem = localStorage.getItem('saathi_reminders');
+if (savedRem) {
+  try { reminders = JSON.parse(savedRem); } catch(e) { reminders = []; }
+}
+if (userName) {
+  document.getElementById('header-sub').textContent = 'नमस्ते, ' + userName + ' जी! 🙏';
+}
+greetUser();
 if (window.speechSynthesis) window.speechSynthesis.getVoices();
 </script>
 </body>
