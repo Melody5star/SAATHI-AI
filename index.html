@@ -229,27 +229,23 @@
 <button id="sos-btn" onclick="sosAlert()">🆘 आपातकाल</button>
 
 <script>
-// ── STATE ──
-var chatLog     = [];
-var userName    = localStorage.getItem('saathi_name') || '';
-var reminders   = [];
-var recog       = null;
-var isRec       = false;
-var greeted     = false;
-
-// ── ELEMENTS ──
+var chatLog  = [];
+var userName = localStorage.getItem('saathi_name') || '';
+var reminders = [];
+var recog    = null;
+var isRec    = false;
 var chatBox  = document.getElementById('chat-box');
 var inputEl  = document.getElementById('user-input');
 var sendBtn  = document.getElementById('send-btn');
 var voiceBtn = document.getElementById('voice-btn');
-var clockEl  = document.getElementById('clock');
 
 // ── CLOCK ──
 function updateClock() {
   var now = new Date();
   var h = now.getHours();
   var m = now.getMinutes();
-  clockEl.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+  document.getElementById('clock').textContent =
+    (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
 }
 updateClock();
 setInterval(updateClock, 10000);
@@ -263,8 +259,7 @@ function getGreeting() {
   return 'Good Night 🌙';
 }
 function getFullTime() {
-  var now = new Date();
-  return now.toLocaleString('hi-IN', {
+  return new Date().toLocaleString('hi-IN', {
     weekday: 'long', year: 'numeric',
     month: 'long', day: 'numeric',
     hour: '2-digit', minute: '2-digit', hour12: true
@@ -288,7 +283,8 @@ function parseReminder(reply) {
   var rt  = new Date();
   rt.setHours(rh, rm, 0, 0);
   if (rt <= now) rt.setDate(rt.getDate() + 1);
-  reminders.push({ msg: msg, time: rt.getTime() });
+  var newRem = { msg: msg, time: rt.getTime(), fired: false, id: Date.now() };
+  reminders.push(newRem);
   localStorage.setItem('saathi_reminders', JSON.stringify(reminders));
   var ts = (rh < 10 ? '0' : '') + rh + ':' + (rm < 10 ? '0' : '') + rm;
   return { msg: msg, timeStr: ts };
@@ -298,16 +294,18 @@ function checkReminders() {
   var now  = Date.now();
   var keep = [];
   for (var i = 0; i < reminders.length; i++) {
-    if (reminders[i].time <= now) {
-      fireReminder(reminders[i].msg);
-    } else {
-      keep.push(reminders[i]);
+    var r = reminders[i];
+    if (r.time <= now && !r.fired) {
+      r.fired = true;
+      fireReminder(r.msg);
+    } else if (!r.fired) {
+      keep.push(r);
     }
   }
   reminders = keep;
   localStorage.setItem('saathi_reminders', JSON.stringify(reminders));
 }
-setInterval(checkReminders, 20000);
+setInterval(checkReminders, 60000);
 
 function fireReminder(msg) {
   var text = '⏰ याद दिलाना था: ' + msg;
@@ -339,9 +337,7 @@ function addBubble(role, text, badge) {
   wrap.className = 'bubble-wrap ' + role;
   var lbl = document.createElement('div');
   lbl.className = 'bubble-label';
-  lbl.textContent = role === 'user'
-    ? (userName ? userName : 'आप')
-    : 'साथी AI';
+  lbl.textContent = role === 'user' ? (userName ? userName : 'आप') : 'साथी AI';
   var bub = document.createElement('div');
   bub.className = 'bubble';
   bub.innerHTML = text.replace(/\n/g, '<br/>');
@@ -376,19 +372,18 @@ function addTyping() {
 
 // ── NAME CAPTURE ──
 function checkForName(text) {
+  if (userName) return;
   var patterns = [
     /(?:mera naam|my name is|main hoon|I am|mai hoon|naam hai)\s+([A-Za-z\u0900-\u097F]+)/i,
     /^([A-Za-z\u0900-\u097F]{2,15})$/
   ];
-  if (!userName) {
-    for (var i = 0; i < patterns.length; i++) {
-      var m = text.match(patterns[i]);
-      if (m && m[1]) {
-        userName = m[1].trim();
-        localStorage.setItem('saathi_name', userName);
-        document.getElementById('header-sub').textContent = 'नमस्ते, ' + userName + ' जी! 🙏';
-        break;
-      }
+  for (var i = 0; i < patterns.length; i++) {
+    var m = text.match(patterns[i]);
+    if (m && m[1]) {
+      userName = m[1].trim();
+      localStorage.setItem('saathi_name', userName);
+      document.getElementById('header-sub').textContent = 'नमस्ते, ' + userName + ' जी! 🙏';
+      break;
     }
   }
 }
@@ -406,39 +401,39 @@ function sendMessage(override) {
   checkForName(text);
   addBubble('user', text, null);
   chatLog.push({ role: 'user', content: text });
-
   inputEl.value = '';
   inputEl.style.height = 'auto';
   sendBtn.disabled = true;
   var tw = addTyping();
 
-  var systemPrompt = 'Aap "Saathi AI" hain — ek smart, friendly AI assistant.\n\n' +
-    'ABHI KA SAMAY: ' + getFullTime() + '\n\n' +
-    'USER KA NAAM: ' + (userName || 'pata nahi abhi tak') + '\n\n' +
-    'AAPKI PERSONALITY:\n' +
-    '- Bilkul Alexa ya Google Assistant ki tarah kaam karo\n' +
-    '- Friendly, warm aur helpful\n' +
-    '- Hindi, English ya Hinglish — jo user bole wahi bolna\n' +
-    '- Short replies — 2-3 lines maximum jab tak zyada na manga jaye\n\n' +
-    'AAP KYA KAR SAKTE HO:\n' +
-    '- General knowledge ke sawaal\n' +
-    '- Date, time, din batana\n' +
-    '- India aur world news ke baare mein batana\n' +
-    '- Health tips\n' +
-    '- Sarkari yojanaein — PM Vaya Vandana, Ayushman Bharat etc\n' +
-    '- Friendly baatein aur saath\n' +
-    '- Emergency mein 112 bolna\n\n' +
-    
-    'REMINDER RULES — STRICT:\n' +
-'DO NOT add [REMINDER] tag unless user uses EXACT words:\n' +
-'"remind", "yaad dilao", "reminder", "alarm", "baad mein batao"\n' +
-'For news, health, GK, date, time — just answer normally. NO [REMINDER] tag!\n\n' +
-'ONLY when reminder is asked:\n' +
-'Calculate exact time from: ' + get24Time() + '\n' +
-'Format ONLY: [REMINDER:HH:MM:short message]\n' +
-'Example: user says "5 min baad yaad dilao" at 11:30\n' +
-'→ Reply: "Bilkul! [REMINDER:11:35:Yaad karo!]"\n\n' +
-'ONE rule: If no reminder asked = NO [REMINDER] tag. Ever.';
+  var systemPrompt =
+    'You are SaathiAI — a smart friendly assistant like Alexa or Google Assistant for elderly Indians.\n\n' +
+    'CURRENT DATE AND TIME: ' + getFullTime() + '\n' +
+    'CURRENT 24H TIME: ' + get24Time() + '\n' +
+    'USER NAME: ' + (userName || 'unknown') + '\n\n' +
+    'PERSONALITY:\n' +
+    '- Warm, friendly, patient — like a trusted family member\n' +
+    '- Match user language — Hindi, English or Hinglish\n' +
+    '- Keep replies short — 2 to 3 lines only\n\n' +
+    'YOU CAN HELP WITH:\n' +
+    '- General knowledge, GK questions\n' +
+    '- Current date, time, day of week\n' +
+    '- India and world news summaries\n' +
+    '- Health and wellness tips\n' +
+    '- Government schemes — PM Vaya Vandana, Ayushman Bharat etc\n' +
+    '- Friendly conversation\n' +
+    '- Emergency — always say call 112\n\n' +
+    'REMINDER RULES — VERY STRICT:\n' +
+    'ONLY add [REMINDER:HH:MM:message] tag when user CLEARLY asks:\n' +
+    '"remind me", "yaad dilao", "reminder", "alarm", "baad mein batao"\n\n' +
+    'For ALL other questions — news, health, GK, date, time, chat:\n' +
+    'Just answer normally. NEVER add [REMINDER] tag!\n\n' +
+    'When reminder IS asked — calculate exact time from current 24H time above:\n' +
+    'Format: [REMINDER:HH:MM:short message here]\n' +
+    'Example: Current time 14:30, user says "5 min baad yaad dilao"\n' +
+    '→ Reply: "Bilkul! [REMINDER:14:35:Yaad karo!]"\n\n' +
+    'RULE: No reminder asked = NO [REMINDER] tag. Zero exceptions.';
+
   var messages = [{ role: 'system', content: systemPrompt }];
   for (var i = 0; i < chatLog.length; i++) {
     messages.push(chatLog[i]);
@@ -473,31 +468,19 @@ function sendMessage(override) {
   });
 }
 
-// ── GREETING ON LOAD ──
+// ── GREETING ──
 function greetUser() {
-  var g = getGreeting();
+  var g    = getGreeting();
   var name = userName ? userName + ' जी!' : '';
-  var msg = g + (name ? ' ' + name : '') +
-    ' मैं साथी AI हूँ — आपका अपना डिजिटल सहायक।';
-
-  if (!userName) {
-    msg += ' आपका नाम क्या है?';
-  } else {
-    msg += ' आज मैं आपकी कैसे मदद कर सकता हूँ?';
-  }
-
+  var msg  = g + (name ? ' ' + name : '') + ' मैं साथी AI हूँ — आपका अपना डिजिटल सहायक।';
+  msg += !userName ? ' आपका नाम क्या है?' : ' आज मैं आपकी कैसे मदद कर सकता हूँ?';
   addBubble('assistant', msg, null);
-  speak(msg);
 }
 
 function sq(t) { sendMessage(t); }
-
 function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault(); sendMessage();
-  }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 }
-
 function autoResize(el) {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 140) + 'px';
@@ -546,7 +529,14 @@ function sosAlert() {
 // ── INIT ──
 var savedRem = localStorage.getItem('saathi_reminders');
 if (savedRem) {
-  try { reminders = JSON.parse(savedRem); } catch(e) { reminders = []; }
+  try {
+    var loaded  = JSON.parse(savedRem);
+    var nowInit = Date.now();
+    reminders   = loaded.filter(function(r) {
+      return !r.fired && r.time > nowInit;
+    });
+    localStorage.setItem('saathi_reminders', JSON.stringify(reminders));
+  } catch(e) { reminders = []; }
 }
 if (userName) {
   document.getElementById('header-sub').textContent = 'नमस्ते, ' + userName + ' जी! 🙏';
