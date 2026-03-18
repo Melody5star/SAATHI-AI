@@ -428,19 +428,17 @@ function sendMessage(override) {
     '- Sarkari yojanaein — PM Vaya Vandana, Ayushman Bharat etc\n' +
     '- Friendly baatein aur saath\n' +
     '- Emergency mein 112 bolna\n\n' +
-    'REMINDER RULE — BAHUT ZAROORI:\n' +
-    'SIRF TAB reminder set karo jab user SEEDHA bole:\n' +
-    '"remind me", "yaad dilao", "reminder set karo", "alarm lagao"\n' +
-    'Agar user sirf general baat kare, news pooche, health pooche\n' +
-    '— TAB BILKUL reminder mat mention karo!\n\n' +
-    'Jab reminder set karna ho:\n' +
-    'Current time use karo + calculate karo sahi time\n' +
-    'Format: [REMINDER:HH:MM:message yahan]\n' +
-    'Example: Abhi 14:30 hai, user bole "5 min baad batao"\n' +
-    '→ [REMINDER:14:35:Aapka reminder!]\n\n' +
-    'IMPORTANT: Ek reply mein SIRF EK KAAM karo.\n' +
-    'Agar reminder nahi manga — [REMINDER] tag bilkul mat likho!';
-
+    
+    'REMINDER RULES — STRICT:\n' +
+'DO NOT add [REMINDER] tag unless user uses EXACT words:\n' +
+'"remind", "yaad dilao", "reminder", "alarm", "baad mein batao"\n' +
+'For news, health, GK, date, time — just answer normally. NO [REMINDER] tag!\n\n' +
+'ONLY when reminder is asked:\n' +
+'Calculate exact time from: ' + get24Time() + '\n' +
+'Format ONLY: [REMINDER:HH:MM:short message]\n' +
+'Example: user says "5 min baad yaad dilao" at 11:30\n' +
+'→ Reply: "Bilkul! [REMINDER:11:35:Yaad karo!]"\n\n' +
+'ONE rule: If no reminder asked = NO [REMINDER] tag. Ever.';
   var messages = [{ role: 'system', content: systemPrompt }];
   for (var i = 0; i < chatLog.length; i++) {
     messages.push(chatLog[i]);
